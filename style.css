@@ -255,6 +255,37 @@ body {
   color: #FFFFFF;
 }
 
+.demo-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 14px 0;
+  color: var(--slate-500);
+  font-size: 12px;
+}
+
+.demo-divider::before,
+.demo-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.demo-divider span {
+  padding: 0 10px;
+}
+
+.btn-demo {
+  background: var(--its-blue-light);
+  color: var(--its-blue);
+  border: 1.5px solid #BFDBFE;
+  font-size: 14px;
+}
+
+.btn-demo:hover {
+  background: #DBEAFE;
+}
+
 /* Motor Cards */
 .section-title {
   font-size: 12px;
@@ -291,6 +322,16 @@ body {
   border: 2px solid #F87171;
 }
 
+.motor-card.pending {
+  background: var(--amber-bg);
+  border: 2px solid #F59E0B;
+}
+
+.motor-card.rejected {
+  background: var(--slate-100);
+  border: 2px solid var(--slate-300);
+}
+
 .card-top {
   display: flex;
   justify-content: space-between;
@@ -314,6 +355,14 @@ body {
   background: var(--red-primary);
 }
 
+.status-pill.pending {
+  background: #D97706;
+}
+
+.status-pill.rejected {
+  background: var(--slate-600);
+}
+
 .card-action-hint {
   font-size: 12px;
   font-weight: 700;
@@ -321,6 +370,8 @@ body {
 
 .unlocked .card-action-hint { color: #047857; }
 .locked .card-action-hint { color: #B91C1C; }
+.pending .card-action-hint { color: #B45309; }
+.rejected .card-action-hint { color: var(--slate-600); }
 
 .motor-name {
   font-size: 17px;
@@ -329,6 +380,8 @@ body {
 
 .unlocked .motor-name { color: var(--green-dark); }
 .locked .motor-name { color: var(--red-dark); }
+.pending .motor-name { color: #78350F; }
+.rejected .motor-name { color: var(--slate-700); }
 
 .motor-plate {
   font-size: 24px;
@@ -344,6 +397,8 @@ body {
 
 .unlocked .card-divider { background: var(--green-border); }
 .locked .card-divider { background: var(--red-border); }
+.pending .card-divider { background: var(--amber-border); }
+.rejected .card-divider { background: var(--slate-200); }
 
 .motor-desc {
   font-size: 11.5px;
@@ -351,6 +406,8 @@ body {
 
 .unlocked .motor-desc { color: #065F46; }
 .locked .motor-desc { color: #991B1B; }
+.pending .motor-desc { color: #92400E; }
+.rejected .motor-desc { color: var(--slate-600); }
 
 .info-banner {
   background: var(--slate-50);
@@ -707,36 +764,4 @@ input:checked + .slider:before {
 
 .toast.show {
   opacity: 1;
-}
-
-/* Demo Account Button */
-.demo-divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 14px 0;
-  color: var(--slate-500);
-  font-size: 12px;
-}
-
-.demo-divider::before,
-.demo-divider::after {
-  content: "";
-  flex: 1;
-  border-bottom: 1px solid var(--slate-200);
-}
-
-.demo-divider span {
-  padding: 0 10px;
-}
-
-.btn-demo {
-  background: var(--its-blue-light);
-  color: var(--its-blue);
-  border: 1.5px solid #BFDBFE;
-  font-size: 14px;
-}
-
-.btn-demo:hover {
-  background: #DBEAFE;
 }

@@ -1,6 +1,6 @@
 // Tempel URL dan Anon Public Key dari project Supabase kamu di sini
-const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = "https://gbbnwrkodequymxafkgr.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_fBDoySh6gExhUr3IODA9Jw_2aNznmgx";
 
 const isSupabaseConfigured =
   SUPABASE_URL.startsWith("https://") &&
@@ -12,8 +12,8 @@ const supabaseClient = isSupabaseConfigured
   : null;
 
 let currentUser = {
-  nrp: "5026231218",
-  name: "Jeremy Siregar",
+  nrp: "",
+  name: "",
   role: "mahasiswa"
 };
 
@@ -36,7 +36,7 @@ function showScreen(screenId) {
   window.scrollTo(0, 0);
 }
 
-// Fetch Data dari Supabase (dengan fallback lokal jika key belum diisi)
+// Fetch Data dari Supabase
 async function fetchMotorcycles() {
   if (!supabaseClient) {
     if (motorsList.length === 0) {
@@ -100,14 +100,29 @@ async function renderStudentHome() {
 
   motors.forEach((motor) => {
     const isLocked = Boolean(motor.is_locked);
-    const stateClass = isLocked ? "locked" : "unlocked";
-    const badgeText = isLocked ? "AKSES DIKUNCI" : "AKSES TERBUKA";
     const categoryText = motor.skk_note || "Motor Pribadi";
-    const verifyLabel = motor.status === "verified" ? "Terverifikasi SKK" : "Menunggu Verifikasi";
 
-    const descText = isLocked
-      ? `${categoryText} • Palang terkunci selama parkir di kampus`
-      : `${categoryText} (${verifyLabel}) • Siap melintas tanpa berhenti`;
+    let stateClass = "";
+    let badgeText = "";
+    let descText = "";
+
+    if (motor.status === "pending") {
+      stateClass = "pending";
+      badgeText = "MENUNGGU ACC SKK";
+      descText = `${categoryText} • Menunggu verifikasi petugas SKK sebelum bisa melintas`;
+    } else if (motor.status === "rejected") {
+      stateClass = "rejected";
+      badgeText = "DITOLAK SKK";
+      descText = `${categoryText} • Pengajuan ditolak petugas, silakan hubungi pos SKK`;
+    } else if (isLocked) {
+      stateClass = "locked";
+      badgeText = "AKSES DIKUNCI";
+      descText = `${categoryText} • Palang terkunci selama parkir di kampus`;
+    } else {
+      stateClass = "unlocked";
+      badgeText = "AKSES TERBUKA";
+      descText = `${categoryText} (Terverifikasi SKK) • Siap melintas tanpa berhenti`;
+    }
 
     const card = document.createElement("div");
     card.className = `motor-card ${stateClass}`;
@@ -132,7 +147,7 @@ async function renderStudentHome() {
   });
 }
 
-// Render Dashboard SKK ITS
+// Render Dashboard Petugas SKK ITS
 async function renderSkkDashboard() {
   const listEl = document.getElementById("skk-motor-list");
   listEl.innerHTML = `<div class="empty-state">Memuat data kendaraan...</div>`;
@@ -180,13 +195,14 @@ async function updateVerificationStatus(id, newStatus) {
       return;
     }
   } else {
-    const idx = motorsList.findIndex((m) => m.id === id);
+    const idx = motorsList.findIndex((m) => String(m.id) === String(id));
     if (idx !== -1) motorsList[idx].status = newStatus;
   }
 
   showToast(`Status diubah menjadi ${newStatus}`);
   renderSkkDashboard();
 }
+window.updateVerificationStatus = updateVerificationStatus;
 
 // Render Detail & Kontrol Kunci Akses Keluar
 function renderDetailScreen() {
@@ -202,7 +218,7 @@ function renderDetailScreen() {
     verifyBadge.textContent = "Terverifikasi SKK";
   } else {
     verifyBadge.className = "verify-badge pending";
-    verifyBadge.textContent = motor.status === "rejected" ? "Ditolak SKK" : "Menunggu Verifikasi";
+    verifyBadge.textContent = motor.status === "rejected" ? "Ditolak SKK" : "Menunggu ACC SKK";
   }
 
   document.getElementById("detail-motor-name").textContent = `${motor.brand} ${motor.color ? `(${motor.color})` : ""}`;
@@ -224,6 +240,8 @@ function renderDetailScreen() {
   simResult.innerHTML = "";
 
   if (motor.is_locked) {
+    lockCard.style.background = "";
+    lockCard.style.borderColor = "";
     lockCard.className = "lock-control-card locked";
     statusPill.className = "status-pill locked";
     statusPill.textContent = "AKSES KELUAR DIKUNCI";
@@ -242,7 +260,30 @@ function renderDetailScreen() {
 
     mainBtn.className = "btn btn-green";
     mainBtn.textContent = "Buka Kunci Akses untuk Keluar";
+  } else if (motor.status !== "verified") {
+    lockCard.className = "lock-control-card unlocked";
+    lockCard.style.background = "var(--amber-bg)";
+    lockCard.style.borderColor = "#F59E0B";
+    statusPill.className = "status-pill pending";
+    statusPill.textContent = motor.status === "rejected" ? "DITOLAK SKK" : "MENUNGGU ACC SKK";
+    toggleInput.checked = false;
+
+    lockHeading.style.color = "#78350F";
+    lockHeading.textContent = "Menunggu Persetujuan Petugas SKK";
+    lockDesc.style.color = "#92400E";
+    lockDesc.textContent =
+      "Pengajuan kendaraan sudah masuk ke sistem SKK ITS. Palang gerbang belum terbuka otomatis sebelum dokumen disetujui petugas.";
+    lockDivider.style.background = "var(--amber-border)";
+    lockSubTitle.style.color = "#78350F";
+    lockSubTitle.textContent = "Status Keamanan:";
+    lockSubDesc.style.color = "#92400E";
+    lockSubDesc.textContent = "Anda tetap bisa mengaktifkan kunci parkir lebih awal di bawah.";
+
+    mainBtn.className = "btn btn-red";
+    mainBtn.textContent = "Kunci Akses Keluar Gerbang";
   } else {
+    lockCard.style.background = "";
+    lockCard.style.borderColor = "";
     lockCard.className = "lock-control-card unlocked";
     statusPill.className = "status-pill unlocked";
     statusPill.textContent = "AKSES KELUAR TERBUKA";
@@ -287,7 +328,7 @@ async function toggleMotorLock() {
   showToast(nextLockState ? "Akses keluar gerbang dikunci" : "Akses keluar gerbang dibuka");
 }
 
-// Event Listeners
+// Login & Demo Account
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   currentUser = {
@@ -306,7 +347,25 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   showToast(`Selamat datang, ${currentUser.name}`);
 });
 
+document.getElementById("btn-fill-demo").addEventListener("click", () => {
+  document.getElementById("login-role").value = "mahasiswa";
+  document.getElementById("input-nrp").value = "5026231000";
+  document.getElementById("input-nama").value = "USERDEMO";
+  document.getElementById("input-pass").value = "password123";
+  showToast("Akun demo terisi — klik Masuk ke GateFlow");
+});
 
+function handleLogout() {
+  document.getElementById("login-form").reset();
+  motorsList = [];
+  selectedMotorId = null;
+  showScreen("screen-login");
+}
+
+document.getElementById("btn-logout").addEventListener("click", handleLogout);
+document.getElementById("btn-logout-skk").addEventListener("click", handleLogout);
+
+// Navigasi Tambah & Detail Motor
 document.getElementById("btn-go-add").addEventListener("click", () => {
   document.getElementById("motor-brand-input").value = "";
   document.getElementById("motor-color-input").value = "";
@@ -376,7 +435,7 @@ document.getElementById("upload-box").addEventListener("click", () => {
   uploadSub.textContent = "Berkas siap disimpan (Ketuk untuk mengganti)";
 });
 
-// Simpan Kendaraan Baru ke Supabase
+// Simpan Kendaraan Baru (Status awal: pending menunggu ACC SKK)
 document.getElementById("add-motor-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const brand = document.getElementById("motor-brand-input").value.trim();
@@ -400,7 +459,7 @@ document.getElementById("add-motor-form").addEventListener("submit", async (e) =
     brand,
     color,
     stnk_image: selectedOwnership === "Pinjaman (24 Jam)" ? "Foto_Pelat_24Jam.jpg" : "STNK_Verified.jpg",
-    status: "verified",
+    status: "pending",
     is_locked: false,
     skk_note: selectedOwnership
   };
@@ -421,7 +480,7 @@ document.getElementById("add-motor-form").addEventListener("submit", async (e) =
   submitBtn.textContent = "Simpan Kendaraan";
   await renderStudentHome();
   showScreen("screen-home");
-  showToast(`${brand} (${plate}) berhasil ditambahkan`);
+  showToast(`${brand} (${plate}) diajukan — menunggu ACC SKK`);
 });
 
 // Toggle Lock dari Saklar maupun Tombol Utama
@@ -477,23 +536,3 @@ document.getElementById("btn-delete-motor").addEventListener("click", async () =
   showScreen("screen-home");
   showToast("Kendaraan berhasil dihapus");
 });
-
-// Isi otomatis kredensial Akun Demo
-document.getElementById("btn-fill-demo").addEventListener("click", () => {
-  document.getElementById("login-role").value = "mahasiswa";
-  document.getElementById("input-nrp").value = "5026231000";
-  document.getElementById("input-nama").value = "USERDEMO";
-  document.getElementById("input-pass").value = "password123";
-  showToast("Akun demo terisi — klik Masuk ke GateFlow");
-});
-
-// Kosongkan kembali form login saat Keluar
-function handleLogout() {
-  document.getElementById("login-form").reset();
-  motorsList = [];
-  selectedMotorId = null;
-  showScreen("screen-login");
-}
-
-document.getElementById("btn-logout").addEventListener("click", handleLogout);
-document.getElementById("btn-logout-skk").addEventListener("click", handleLogout);
