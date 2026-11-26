@@ -38,10 +38,10 @@ function showScreen(screenId) {
 
 function escapeXml(str) {
   return String(str || "")
-    .replace(/&/g, "&")
-    .replace(/</g, "<")
-    .replace(/>/g, ">")
-    .replace(/"/g, "");
+    .replace(/&/g, "\x26amp;")
+    .replace(/</g, "\x26lt;")
+    .replace(/>/g, "\x26gt;")
+    .replace(/"/g, "\x26quot;");
 }
 
 // Generator Gambar Dummy STNK / Foto Pelat (SVG Data URL)
