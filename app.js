@@ -306,8 +306,6 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   showToast(`Selamat datang, ${currentUser.name}`);
 });
 
-document.getElementById("btn-logout").addEventListener("click", () => showScreen("screen-login"));
-document.getElementById("btn-logout-skk").addEventListener("click", () => showScreen("screen-login"));
 
 document.getElementById("btn-go-add").addEventListener("click", () => {
   document.getElementById("motor-brand-input").value = "";
@@ -479,3 +477,23 @@ document.getElementById("btn-delete-motor").addEventListener("click", async () =
   showScreen("screen-home");
   showToast("Kendaraan berhasil dihapus");
 });
+
+// Isi otomatis kredensial Akun Demo
+document.getElementById("btn-fill-demo").addEventListener("click", () => {
+  document.getElementById("login-role").value = "mahasiswa";
+  document.getElementById("input-nrp").value = "5026231000";
+  document.getElementById("input-nama").value = "USERDEMO";
+  document.getElementById("input-pass").value = "password123";
+  showToast("Akun demo terisi — klik Masuk ke GateFlow");
+});
+
+// Kosongkan kembali form login saat Keluar
+function handleLogout() {
+  document.getElementById("login-form").reset();
+  motorsList = [];
+  selectedMotorId = null;
+  showScreen("screen-login");
+}
+
+document.getElementById("btn-logout").addEventListener("click", handleLogout);
+document.getElementById("btn-logout-skk").addEventListener("click", handleLogout);

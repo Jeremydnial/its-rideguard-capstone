@@ -708,3 +708,35 @@ input:checked + .slider:before {
 .toast.show {
   opacity: 1;
 }
+
+/* Demo Account Button */
+.demo-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 14px 0;
+  color: var(--slate-500);
+  font-size: 12px;
+}
+
+.demo-divider::before,
+.demo-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.demo-divider span {
+  padding: 0 10px;
+}
+
+.btn-demo {
+  background: var(--its-blue-light);
+  color: var(--its-blue);
+  border: 1.5px solid #BFDBFE;
+  font-size: 14px;
+}
+
+.btn-demo:hover {
+  background: #DBEAFE;
+}
