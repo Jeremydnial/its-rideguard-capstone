@@ -3,292 +3,231 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ITS RideGuard — Sistem Registrasi & Verifikasi Motor Kampus</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>ITS RideGuard / GateFlow — Validasi Gerbang Otomatis</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body>
 
-  <!-- ========================================================= -->
-  <!-- VIEW 1: HALAMAN LOGIN DUAL-ROLE (MAHASISWA VS SKK)        -->
-  <!-- ========================================================= -->
-  <div id="loginView" class="min-h-screen flex items-center justify-center p-4 transition-colors duration-300 bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900">
-    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200/60">
-      
-      <!-- Header Branding -->
-      <div id="loginBanner" class="p-7 text-center transition-colors duration-300 bg-blue-900 text-white">
-        <div class="w-14 h-14 mx-auto rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center font-extrabold text-2xl mb-3 shadow-inner">
-          RG
-        </div>
-        <h1 class="text-xl font-extrabold tracking-tight">ITS RideGuard</h1>
-        <p id="loginSubtitle" class="text-xs text-blue-200 mt-1">Portal Registrasi Kendaraan Mahasiswa ITS</p>
+<div class="app-shell">
+
+  <!-- SCREEN 1: LOGIN MYITS -->
+  <section id="screen-login" class="screen active">
+    <div class="content">
+      <div class="brand-logo">GF</div>
+      <h1 class="app-title">GateFlow ITS</h1>
+      <p class="app-subtitle">Validasi Gerbang Otomatis & Kontrol Keamanan Motor</p>
+
+      <div class="login-card">
+        <h2 class="card-heading">Masuk dengan Akun myITS</h2>
+        <p class="card-sub">Gunakan myITS ID untuk mengelola akses kendaraan</p>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label" for="login-role">Masuk Sebagai</label>
+            <select id="login-role" class="form-input">
+              <option value="mahasiswa">Mahasiswa ITS</option>
+              <option value="skk">Petugas Keamanan (SKK ITS)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="input-nrp">myITS ID / NRP / NIP</label>
+            <input id="input-nrp" class="form-input" type="text" placeholder="Contoh: 5026231218" value="5026231218" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="input-nama">Nama Lengkap</label>
+            <input id="input-nama" class="form-input" type="text" placeholder="Nama lengkap" value="Jeremy Siregar" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="input-pass">Kata Sandi</label>
+            <input id="input-pass" class="form-input" type="password" value="••••••••••" required />
+          </div>
+
+          <button type="submit" class="btn btn-primary">Masuk ke GateFlow</button>
+        </form>
       </div>
 
-      <!-- Role Switcher Tabs -->
-      <div class="p-6">
-        <div class="grid grid-cols-2 gap-1.5 bg-slate-100 p-1.5 rounded-xl mb-6">
-          <button type="button" id="tabMahasiswa" onclick="switchLoginRole('mahasiswa')"
-            class="py-2.5 text-xs font-bold rounded-lg transition bg-white text-blue-900 shadow-sm">
-            🎓 Mahasiswa ITS
-          </button>
-          <button type="button" id="tabSkk" onclick="switchLoginRole('skk')"
-            class="py-2.5 text-xs font-bold rounded-lg transition text-slate-500 hover:text-slate-800">
-            🛡️ Petugas SKK
-          </button>
-        </div>
-
-        <!-- Form Login Mahasiswa -->
-        <form id="formLoginMahasiswa" class="space-y-4">
-          <div class="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-2.5">
-            <span class="text-[11px] text-blue-800 font-medium">Akun Demo Mahasiswa siap pakai</span>
-            <button type="button" onclick="fillDemoMahasiswa()" class="text-[11px] font-bold text-blue-700 hover:underline">
-              Isi Otomatis
-            </button>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">NRP Mahasiswa</label>
-            <input type="text" id="loginNrp" required placeholder="Contoh: 5026231000"
-              class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap</label>
-            <input type="text" id="loginNama" required placeholder="Contoh: USER1"
-              class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
-          </div>
-          <button type="submit"
-            class="w-full py-3 bg-blue-800 hover:bg-blue-900 text-white font-bold text-sm rounded-xl shadow-md transition">
-            Masuk sebagai Mahasiswa →
-          </button>
-        </form>
-
-        <!-- Form Login Petugas SKK -->
-        <form id="formLoginSkk" class="space-y-4 hidden">
-          <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5">
-            <span class="text-[11px] text-amber-900 font-medium">Akun Demo Petugas Pos Keamanan</span>
-            <button type="button" onclick="fillDemoSkk()" class="text-[11px] font-bold text-amber-700 hover:underline">
-              Isi Otomatis
-            </button>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">ID Petugas SKK</label>
-            <input type="text" id="loginSkkId" required placeholder="Contoh: SKK-01"
-              class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Pos Jaga / Gate</label>
-            <input type="text" id="loginSkkGate" required placeholder="Contoh: Gerbang Utama Bundaran ITS"
-              class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
-          </div>
-          <button type="submit"
-            class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold text-sm rounded-xl shadow-md transition">
-            Masuk ke SKK Command Center →
-          </button>
-        </form>
+      <div class="footer-links">
+        <p>Terhubung dengan Database Supabase & SKK ITS</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ========================================================= -->
-  <!-- VIEW 2: PORTAL MAHASISWA (UI BIRU/PUTIH - AKADEMIK ITS)   -->
-  <!-- ========================================================= -->
-  <div id="mahasiswaView" class="hidden flex-1 flex flex-col">
-    <nav class="bg-blue-900 text-white shadow-md sticky top-0 z-30">
-      <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-amber-400 text-blue-950 font-extrabold flex items-center justify-center text-sm shadow">
-            ITS
+  <!-- SCREEN 2A: BERANDA MAHASISWA (DAFTAR MOTOR) -->
+  <section id="screen-home" class="screen">
+    <div class="top-bar">
+      <div>
+        <div id="user-greeting" class="user-name">Halo, Jeremy</div>
+        <div id="user-sub" class="user-meta">NRP 5026231218 • Mahasiswa ITS</div>
+      </div>
+      <div class="top-actions">
+        <span class="badge-lpr">LPR Aktif</span>
+        <button id="btn-logout" class="link-muted" type="button">Keluar</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section-title">Motormu yang Terdaftar</div>
+      <div class="section-sub">Klik kartu motor untuk mengatur kunci akses keluar gerbang</div>
+
+      <div id="motor-list" class="list-container">
+        <div class="empty-state">Memuat data kendaraan dari Supabase...</div>
+      </div>
+
+      <div class="info-banner">
+        <div class="info-banner-title">Bawa motor lain atau pinjam motor teman?</div>
+        <div class="info-banner-desc">
+          Tambahkan jenis motor dan pelat nomornya sebelum berangkat agar kamera gerbang ITS mengenali kendaraan Anda.
+        </div>
+      </div>
+
+      <div class="bottom-cta">
+        <button id="btn-go-add" class="btn btn-primary" type="button">+ Tambah Kendaraan</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2B: DASHBOARD PETUGAS SKK ITS -->
+  <section id="screen-skk" class="screen">
+    <div class="top-bar">
+      <div>
+        <div id="skk-greeting" class="user-name">Pos Gerbang SKK ITS</div>
+        <div id="skk-sub" class="user-meta">Monitor Verifikasi & Status Kunci</div>
+      </div>
+      <div class="top-actions">
+        <span class="badge-lpr">SKK Live</span>
+        <button id="btn-logout-skk" class="link-muted" type="button">Keluar</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section-title">Daftar Kendaraan Terdaftar</div>
+      <div class="section-sub">Verifikasi STNK baru & pantau status kunci parkir mahasiswa</div>
+
+      <div id="skk-motor-list" class="list-container">
+        <div class="empty-state">Memuat data kendaraan...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: TAMBAH KENDARAAN -->
+  <section id="screen-add" class="screen">
+    <div class="nav-bar">
+      <button id="btn-back-add" class="btn-back" type="button">< Kembali</button>
+      <span class="nav-title">Tambah Kendaraan</span>
+      <span class="nav-spacer"></span>
+    </div>
+
+    <div class="content">
+      <form id="add-motor-form" class="flex-form">
+        <div class="form-group">
+          <label class="form-label" for="motor-brand-input">Jenis / Merk Motor *</label>
+          <input id="motor-brand-input" class="form-input" type="text" placeholder="Contoh: Yamaha NMAX / Honda Vario 160" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="motor-color-input">Warna Motor *</label>
+          <input id="motor-color-input" class="form-input" type="text" placeholder="Contoh: Hitam Doff" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="motor-plate-input">Nomor Pelat Kendaraan *</label>
+          <input id="motor-plate-input" class="form-input plate-input" type="text" placeholder="Contoh: L 9988 XY" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Kategori Kepemilikan *</label>
+          <div class="segment-group">
+            <button type="button" class="segment-btn active" data-type="Motor Pribadi">Motor Pribadi</button>
+            <button type="button" class="segment-btn" data-type="Pinjaman (24 Jam)">Pinjaman (24 Jam)</button>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label id="proof-label" class="form-label">Bukti STNK / Foto Pelat *</label>
+          <div id="upload-box" class="upload-box">
+            <div id="upload-title" class="upload-title">[ + Ketuk untuk Lampirkan Bukti STNK / Pelat ]</div>
+            <div id="upload-sub" class="upload-sub">Simulasi unggah berkas verifikasi kendaraan</div>
+          </div>
+        </div>
+
+        <div class="bottom-cta">
+          <button id="btn-submit-motor" type="submit" class="btn btn-primary">Simpan Kendaraan</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: DETAIL & KONTROL KUNCI AKSES MOTOR -->
+  <section id="screen-detail" class="screen">
+    <div class="nav-bar">
+      <button id="btn-back-detail" class="btn-back" type="button">< Kembali</button>
+      <span class="nav-title">Kontrol Akses Motor</span>
+      <span class="nav-spacer"></span>
+    </div>
+
+    <div class="content">
+      <div class="summary-box">
+        <div class="summary-top">
+          <span class="summary-label">KENDARAAN DIPILIH</span>
+          <span id="detail-verify-badge" class="verify-badge verified">Terverifikasi SKK</span>
+        </div>
+        <div id="detail-motor-name" class="detail-name">Honda Vario 160</div>
+        <div id="detail-motor-plate" class="detail-plate">L 4521 AB</div>
+        <div id="detail-owner-text" class="detail-owner">Pemilik: Jeremy Siregar (5026231218)</div>
+      </div>
+
+      <!-- Kartu Kontrol Kunci (Merah = Dikunci, Hijau = Terbuka) -->
+      <div id="lock-card" class="lock-control-card unlocked">
+        <div class="lock-header">
+          <span id="detail-status-pill" class="status-pill unlocked">AKSES KELUAR TERBUKA</span>
+          <label class="switch" title="Geser untuk mengunci atau membuka akses">
+            <input id="lock-toggle-input" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <h3 id="lock-heading" class="lock-heading">Siap Melintas Gerbang Keluar</h3>
+        <p id="lock-desc" class="lock-desc">
+          Akses otomatis aktif. Kamera LPR di gerbang keluar ITS akan membuka palang secara otomatis tanpa Anda harus berhenti.
+        </p>
+
+        <div id="lock-divider" class="card-divider"></div>
+
+        <div id="lock-sub-title" class="lock-sub-title">Panduan Berkendara:</div>
+        <div id="lock-sub-desc" class="lock-sub-desc">
+          Simpan HP di saku, tetap pegang setir dua tangan saat melintas.
+        </div>
+      </div>
+
+      <!-- Simulasi Kamera LPR Gerbang -->
+      <div class="sim-box">
+        <div class="sim-row">
           <div>
-            <h1 class="font-bold text-sm sm:text-base leading-tight">ITS RideGuard — Portal Mahasiswa</h1>
-            <p id="mhsUserInfo" class="text-[11px] text-blue-200">5026231000 • USER1</p>
+            <div class="sim-label">SIMULASI KAMERA LPR GERBANG</div>
+            <div class="sim-sub">Uji reaksi palang gerbang saat motor melintas</div>
           </div>
+          <button id="btn-test-gate" type="button" class="btn-sim">Uji Gerbang</button>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="hidden sm:inline-flex items-center gap-1.5 text-[11px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-2.5 py-1 rounded-full font-semibold">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Supabase Live
-          </span>
-          <button onclick="logout()" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg font-semibold transition">
-            Keluar / Ganti Peran
-          </button>
-        </div>
-      </div>
-    </nav>
-
-    <main class="max-w-6xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
-      <!-- Kolom Kiri: Form Tambah Motor -->
-      <section class="lg:col-span-5">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sticky top-20">
-          <h2 class="font-bold text-base text-slate-900 mb-1">Daftarkan Motor Baru</h2>
-          <p class="text-xs text-slate-500 mb-4">Data langsung tersimpan ke database & diteruskan ke SKK ITS.</p>
-
-          <form id="motorForm" class="space-y-3.5">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Nomor Polisi (Plat) *</label>
-              <input type="text" id="inputPlate" required placeholder="Contoh: L 4582 BAX"
-                class="w-full px-3.5 py-2 text-sm uppercase font-semibold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Merk & Tipe *</label>
-                <input type="text" id="inputBrand" required placeholder="Honda Vario 160"
-                  class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Warna Motor *</label>
-                <input type="text" id="inputColor" required placeholder="Hitam Doff"
-                  class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
-              </div>
-            </div>
-
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="block text-xs font-bold text-slate-700">Foto STNK (Wajib untuk Verifikasi) *</label>
-                <button type="button" onclick="useSampleStnk()" class="text-[11px] font-bold text-blue-700 hover:underline">
-                  Gunakan Contoh STNK
-                </button>
-              </div>
-              <input type="file" id="inputStnkFile" accept="image/*" onchange="handleStnkUpload(event)"
-                class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-xl p-1">
-              
-              <div id="stnkPreviewBox" class="hidden mt-2 relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-                <img id="stnkPreviewImg" src="" alt="Preview STNK" class="w-full h-32 object-cover">
-                <span class="absolute bottom-1.5 right-1.5 bg-slate-900/75 text-white text-[10px] px-2 py-0.5 rounded-md">Pratinjau STNK</span>
-              </div>
-            </div>
-
-            <div id="formErrorAlert" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium"></div>
-
-            <button type="submit" id="btnSubmitMotor"
-              class="w-full py-2.5 bg-blue-800 hover:bg-blue-900 text-white font-bold text-sm rounded-xl shadow transition flex items-center justify-center gap-2">
-              <span>Ajukan Registrasi Motor</span>
-            </button>
-          </form>
-        </div>
-      </section>
-
-      <!-- Kolom Kanan: Daftar Motor Mahasiswa -->
-      <section class="lg:col-span-7 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="font-bold text-base text-slate-900">Kendaraan Terdaftar Saya</h2>
-            <p class="text-xs text-slate-500">Status diperbarui secara real-time setelah diverifikasi petugas SKK.</p>
-          </div>
-          <button onclick="renderMahasiswaList()" class="text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition">
-            ↻ Refresh Data
-          </button>
-        </div>
-
-        <div id="mhsMotorList" class="space-y-3">
-          <div class="text-center py-10 text-xs text-slate-400">Memuat data dari Supabase...</div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- ========================================================= -->
-  <!-- VIEW 3: DASHBOARD PETUGAS SKK (UI DARK SLATE & GOLD)      -->
-  <!-- ========================================================= -->
-  <div id="skkView" class="hidden flex-1 flex flex-col bg-slate-950 text-slate-100">
-    <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
-      <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 font-extrabold flex items-center justify-center text-sm shadow">
-            SKK
-          </div>
-          <div>
-            <h1 class="font-bold text-sm sm:text-base text-white leading-tight">SKK Command Center — Verifikasi STNK</h1>
-            <p id="skkUserInfo" class="text-[11px] text-amber-400">SKK-01 • Gerbang Utama ITS</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="renderSkkList()" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 px-3 py-1.5 rounded-lg font-semibold transition">
-            ↻ Sinkronkan
-          </button>
-          <button onclick="logout()" class="text-xs bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 px-3 py-1.5 rounded-lg font-semibold transition">
-            Keluar
-          </button>
-        </div>
-      </div>
-    </nav>
-
-    <main class="max-w-6xl w-full mx-auto px-4 py-6 space-y-6 flex-1">
-      <div class="grid grid-cols-3 gap-3 sm:gap-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-          <p class="text-[11px] text-slate-400 font-medium">Total Pengajuan</p>
-          <p id="statTotal" class="text-2xl font-extrabold text-white mt-1">0</p>
-        </div>
-        <div class="bg-slate-900 border border-amber-500/30 rounded-2xl p-4">
-          <p class="text-[11px] text-amber-400 font-medium">Menunggu Cek STNK</p>
-          <p id="statPending" class="text-2xl font-extrabold text-amber-400 mt-1">0</p>
-        </div>
-        <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4">
-          <p class="text-[11px] text-emerald-400 font-medium">STNK Terverifikasi</p>
-          <p id="statVerified" class="text-2xl font-extrabold text-emerald-400 mt-1">0</p>
-        </div>
+        <div id="sim-result" class="sim-result"></div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <button onclick="setSkkFilter('all')" id="filterAll" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950">Semua</button>
-        <button onclick="setSkkFilter('pending')" id="filterPending" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-300 border border-slate-800">Menunggu Verifikasi</button>
-        <button onclick="setSkkFilter('verified')" id="filterVerified" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-300 border border-slate-800">Disetujui</button>
-      </div>
-
-      <div id="skkMotorList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="col-span-full text-center py-10 text-xs text-slate-500">Memuat antrean verifikasi dari Supabase...</div>
-      </div>
-    </main>
-  </div>
-
-  <!-- ========================================================= -->
-  <!-- MODAL INSPEKSI STNK UNTUK PETUGAS SKK                     -->
-  <!-- ========================================================= -->
-  <div id="stnkModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl text-slate-100">
-      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
-        <div>
-          <h3 class="font-bold text-base text-white">Inspeksi Dokumen STNK</h3>
-          <p id="modalPlateInfo" class="text-xs text-amber-400 font-semibold"></p>
-        </div>
-        <button onclick="closeStnkModal()" class="text-slate-400 hover:text-white text-lg font-bold px-2">✕</button>
-      </div>
-
-      <div class="p-5 space-y-4">
-        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
-          <p><span class="text-slate-400">Pemilik:</span> <span id="modalOwnerInfo" class="font-bold text-white"></span></p>
-          <p><span class="text-slate-400">Kendaraan:</span> <span id="modalBikeInfo" class="font-medium text-slate-200"></span></p>
-        </div>
-
-        <div class="rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex items-center justify-center min-h-[200px]">
-          <img id="modalStnkImg" src="" alt="Dokumen STNK" class="max-h-64 w-auto object-contain">
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Catatan Verifikasi SKK (Wajib jika ditolak)</label>
-          <input type="text" id="modalSkkNote" placeholder="Contoh: STNK sah sesuai nama mahasiswa / Foto buram"
-            class="w-full px-3.5 py-2 text-xs bg-slate-950 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 pt-2">
-          <button type="button" onclick="submitVerification('rejected')"
-            class="py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/40 font-bold text-xs rounded-xl transition">
-            ✕ Tolak Pengajuan
-          </button>
-          <button type="button" onclick="submitVerification('verified')"
-            class="py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs rounded-xl transition">
-            ✓ Setujui STNK
-          </button>
+      <div class="bottom-cta">
+        <button id="btn-toggle-lock-main" type="button" class="btn btn-red">Kunci Akses Keluar Gerbang</button>
+        <div class="footer-links">
+          <button id="btn-delete-motor" type="button" class="link-danger">Hapus Kendaraan Ini</button>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl border border-slate-700"></div>
+</div>
 
-  <!-- Logic & Koneksi Database -->
-  <script src="app.js"></script>
+<div id="toast" class="toast">Tersimpan</div>
+
+<script src="app.js"></script>
 </body>
 </html>
