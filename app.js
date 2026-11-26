@@ -41,7 +41,7 @@ function escapeXml(str) {
     .replace(/&/g, "&")
     .replace(/</g, "<")
     .replace(/>/g, ">")
-    .replace(/"/g, """);
+    .replace(/"/g, "");
 }
 
 // Generator Gambar Dummy STNK / Foto Pelat (SVG Data URL)
