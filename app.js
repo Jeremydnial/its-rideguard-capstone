@@ -20,7 +20,7 @@ let currentUser = {
 let motorsList = [];
 let selectedMotorId = null;
 let selectedOwnership = "Motor Pribadi";
-let proofAttached = false;
+let generatedProofDataUrl = "";
 
 // Helper UI
 function showToast(message) {
@@ -36,25 +36,81 @@ function showScreen(screenId) {
   window.scrollTo(0, 0);
 }
 
+function escapeXml(str) {
+  return String(str || "")
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
+    .replace(/"/g, """);
+}
+
+// Generator Gambar Dummy STNK / Foto Pelat (SVG Data URL)
+function generateDummyStnkDataUrl({ plate, brand, color, ownerName, nrp, ownershipType }) {
+  const safePlate = escapeXml((plate || "L 9988 XY").toUpperCase());
+  const safeBrand = escapeXml(brand || "Honda Vario 160");
+  const safeColor = escapeXml(color || "Hitam");
+  const safeOwner = escapeXml((ownerName || "USERDEMO").toUpperCase());
+  const safeNrp = escapeXml(nrp || "5026231000");
+  const isLoan = ownershipType === "Pinjaman (24 Jam)";
+
+  const svg = isLoan
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="340" viewBox="0 0 600 340">
+        <rect width="600" height="340" rx="18" fill="#1E293B"/>
+        <rect x="24" y="24" width="552" height="292" rx="14" fill="#0F172A" stroke="#334155" stroke-width="2"/>
+        <text x="44" y="58" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8">FOTO PELAT KENDARAAN PINJAMAN (24 JAM)</text>
+        <text x="44" y="78" font-family="Arial, sans-serif" font-size="12" fill="#94A3B8">Penanggung Jawab: ${safeOwner} (NRP ${safeNrp})</text>
+        
+        <rect x="110" y="108" width="380" height="146" rx="14" fill="#FFFFFF" stroke="#0F172A" stroke-width="6"/>
+        <rect x="118" y="116" width="364" height="130" rx="9" fill="none" stroke="#0F172A" stroke-width="2.5"/>
+        <text x="300" y="182" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#0F172A" text-anchor="middle">${safePlate}</text>
+        <line x1="140" y1="202" x2="460" y2="202" stroke="#CBD5E1" stroke-width="2"/>
+        <text x="300" y="230" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#334155" text-anchor="middle">11 • 29</text>
+        
+        <text x="300" y="292" font-family="Arial, sans-serif" font-size="13" fill="#CBD5E1" text-anchor="middle">${safeBrand} — Warna ${safeColor}</text>
+      </svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="340" viewBox="0 0 600 340">
+        <defs>
+          <linearGradient id="stnkBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#EFF6FF"/>
+            <stop offset="50%" stop-color="#F8FAFC"/>
+            <stop offset="100%" stop-color="#ECFDF5"/>
+          </linearGradient>
+        </defs>
+        <rect width="600" height="340" rx="18" fill="url(#stnkBg)" stroke="#94A3B8" stroke-width="2"/>
+        <rect x="0" y="0" width="600" height="58" rx="18" fill="#013880"/>
+        <rect x="0" y="36" width="600" height="22" fill="#013880"/>
+        <text x="26" y="27" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#93C5FD">KEPOLISIAN NEGARA REPUBLIK INDONESIA</text>
+        <text x="26" y="47" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#FFFFFF">SURAT TANDA NOMOR KENDARAAN BERMOTOR (DUMMY)</text>
+
+        <text x="28" y="92" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#64748B">NOMOR REGISTRASI / PELAT</text>
+        <text x="28" y="126" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#013880">${safePlate}</text>
+
+        <text x="28" y="160" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#64748B">NAMA PEMILIK / PENGENDARA ITS</text>
+        <text x="28" y="182" font-family="Arial, sans-serif" font-size="17" font-weight="bold" fill="#0F172A">${safeOwner}</text>
+        <text x="28" y="201" font-family="Arial, sans-serif" font-size="12" fill="#475569">NRP Terdaftar: ${safeNrp}</text>
+
+        <line x1="28" y1="218" x2="572" y2="218" stroke="#CBD5E1" stroke-width="1.5"/>
+
+        <text x="28" y="244" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#64748B">MERK / TYPE</text>
+        <text x="28" y="266" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#0F172A">${safeBrand}</text>
+
+        <text x="320" y="244" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#64748B">WARNA TNKB / KENDARAAN</text>
+        <text x="320" y="266" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#0F172A">${safeColor}</text>
+
+        <rect x="424" y="78" width="148" height="44" rx="8" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="498" y="98" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#15803D" text-anchor="middle">BERLAKU S/D</text>
+        <text x="498" y="114" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#166534" text-anchor="middle">14 NOV 2029</text>
+
+        <text x="28" y="314" font-family="Arial, sans-serif" font-size="11" fill="#64748B">Dokumen Simulasi Uji Verifikasi GateFlow SKK ITS</text>
+      </svg>`;
+
+  const base64 = btoa(unescape(encodeURIComponent(svg)));
+  return `data:image/svg+xml;base64,${base64}`;
+}
+
 // Fetch Data dari Supabase
 async function fetchMotorcycles() {
   if (!supabaseClient) {
-    if (motorsList.length === 0) {
-      motorsList = [
-        {
-          id: "demo-1",
-          nrp: currentUser.nrp,
-          owner_name: currentUser.name,
-          plate: "L 4521 AB",
-          brand: "Honda Vario 160",
-          color: "Hitam",
-          stnk_image: "STNK_Vario160.jpg",
-          status: "verified",
-          is_locked: false,
-          skk_note: "Motor Pribadi"
-        }
-      ];
-    }
     return motorsList;
   }
 
@@ -81,7 +137,7 @@ async function fetchMotorcycles() {
   return motorsList;
 }
 
-// Render Beranda Mahasiswa
+// Render Beranda Mahasiswa (Motor belum ACC tidak bisa dipencet)
 async function renderStudentHome() {
   const firstName = currentUser.name.split(" ")[0] || "Mahasiswa";
   document.getElementById("user-greeting").textContent = `Halo, ${firstName}`;
@@ -100,27 +156,33 @@ async function renderStudentHome() {
 
   motors.forEach((motor) => {
     const isLocked = Boolean(motor.is_locked);
+    const isVerified = motor.status === "verified";
     const categoryText = motor.skk_note || "Motor Pribadi";
 
     let stateClass = "";
     let badgeText = "";
     let descText = "";
+    let rightHint = "";
 
     if (motor.status === "pending") {
-      stateClass = "pending";
+      stateClass = "pending disabled-card";
       badgeText = "MENUNGGU ACC SKK";
-      descText = `${categoryText} • Menunggu verifikasi petugas SKK sebelum bisa melintas`;
+      rightHint = "Belum Di-ACC";
+      descText = `${categoryText} • Menunggu verifikasi petugas SKK sebelum kontrol akses aktif`;
     } else if (motor.status === "rejected") {
-      stateClass = "rejected";
+      stateClass = "rejected disabled-card";
       badgeText = "DITOLAK SKK";
+      rightHint = "Ditolak";
       descText = `${categoryText} • Pengajuan ditolak petugas, silakan hubungi pos SKK`;
     } else if (isLocked) {
       stateClass = "locked";
       badgeText = "AKSES DIKUNCI";
+      rightHint = "Atur Kunci >";
       descText = `${categoryText} • Palang terkunci selama parkir di kampus`;
     } else {
       stateClass = "unlocked";
       badgeText = "AKSES TERBUKA";
+      rightHint = "Atur Kunci >";
       descText = `${categoryText} (Terverifikasi SKK) • Siap melintas tanpa berhenti`;
     }
 
@@ -128,8 +190,8 @@ async function renderStudentHome() {
     card.className = `motor-card ${stateClass}`;
     card.innerHTML = `
       <div class="card-top">
-        <span class="status-pill ${stateClass}">${badgeText}</span>
-        <span class="card-action-hint">Atur Kunci ></span>
+        <span class="status-pill ${motor.status === "pending" ? "pending" : motor.status === "rejected" ? "rejected" : isLocked ? "locked" : "unlocked"}">${badgeText}</span>
+        <span class="card-action-hint">${rightHint}</span>
       </div>
       <div class="motor-name">${motor.brand} ${motor.color ? `(${motor.color})` : ""}</div>
       <div class="motor-plate">${motor.plate}</div>
@@ -137,43 +199,60 @@ async function renderStudentHome() {
       <div class="motor-desc">${descText}</div>
     `;
 
-    card.addEventListener("click", () => {
-      selectedMotorId = motor.id;
-      renderDetailScreen();
-      showScreen("screen-detail");
-    });
+    // Hanya motor yang sudah verified (di-ACC SKK) yang bisa diklik
+    if (isVerified) {
+      card.addEventListener("click", () => {
+        selectedMotorId = motor.id;
+        renderDetailScreen();
+        showScreen("screen-detail");
+      });
+    }
 
     listEl.appendChild(card);
   });
 }
 
-// Render Dashboard Petugas SKK ITS
+// Render Dashboard Petugas SKK ITS (Hanya menampilkan status pending & hilang setelah diproses)
 async function renderSkkDashboard() {
-  const listEl = document.getElementById("skk-motor-list");
-  listEl.innerHTML = `<div class="empty-state">Memuat data kendaraan...</div>`;
+  document.getElementById("skk-greeting").textContent = `Pos Verifikasi SKK (${currentUser.name})`;
+  document.getElementById("skk-sub").textContent = `NIP ${currentUser.nrp} • Petugas Keamanan ITS`;
 
-  const motors = await fetchMotorcycles();
+  const listEl = document.getElementById("skk-motor-list");
+  listEl.innerHTML = `<div class="empty-state">Memuat antrean verifikasi...</div>`;
+
+  const allMotors = await fetchMotorcycles();
+  const pendingMotors = allMotors.filter((m) => m.status === "pending");
   listEl.innerHTML = "";
 
-  if (motors.length === 0) {
-    listEl.innerHTML = `<div class="empty-state">Belum ada data kendaraan mahasiswa.</div>`;
+  if (pendingMotors.length === 0) {
+    listEl.innerHTML = `<div class="empty-state">Semua pengajuan STNK sudah diverifikasi. Tidak ada antrean baru.</div>`;
     return;
   }
 
-  motors.forEach((motor) => {
-    const lockStatus = motor.is_locked ? "DIKUNCI PEMILIK (DILARANG BUKA)" : "TERBUKA (SIAP MELINTAS)";
-    const lockColor = motor.is_locked ? "#DC2626" : "#059669";
+  pendingMotors.forEach((motor) => {
+    const imgSrc =
+      motor.stnk_image && motor.stnk_image.startsWith("data:image/")
+        ? motor.stnk_image
+        : generateDummyStnkDataUrl({
+            plate: motor.plate,
+            brand: motor.brand,
+            color: motor.color,
+            ownerName: motor.owner_name,
+            nrp: motor.nrp,
+            ownershipType: motor.skk_note
+          });
 
     const card = document.createElement("div");
     card.className = "skk-card";
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <strong style="font-size:16px;">${motor.plate}</strong>
-        <span style="font-size:11px; font-weight:700; color:${lockColor};">${lockStatus}</span>
+        <strong style="font-size:17px; color:#013880;">${motor.plate}</strong>
+        <span style="font-size:11px; font-weight:700; color:#B45309; background:#FEF3C7; padding:3px 10px; border-radius:999px;">MENUNGGU VERIFIKASI</span>
       </div>
-      <div style="font-size:13px; margin-top:4px;">${motor.brand} (${motor.color || "-"})</div>
-      <div style="font-size:12px; color:#64748B; margin-top:2px;">Pemilik: ${motor.owner_name} (${motor.nrp})</div>
-      <div style="font-size:11px; color:#475569; margin-top:4px;">Status STNK: <strong>${motor.status.toUpperCase()}</strong></div>
+      <div style="font-size:13.5px; font-weight:700; margin-top:6px;">${motor.brand} (${motor.color || "-"})</div>
+      <div style="font-size:12px; color:#475569; margin-top:2px;">Pengaju: <strong>${motor.owner_name}</strong> (NRP ${motor.nrp})</div>
+      <div style="font-size:11.5px; color:#64748B; margin-top:2px;">Kategori: ${motor.skk_note || "Motor Pribadi"}</div>
+      <img src="${imgSrc}" class="skk-stnk-thumb" alt="Dokumen STNK ${motor.plate}" title="Klik untuk memperbesar dokumen" onclick="openStnkModal(this.src)" />
       <div class="skk-actions">
         <button class="btn-sm btn-green" onclick="updateVerificationStatus('${motor.id}', 'verified')">Setujui STNK</button>
         <button class="btn-sm btn-red" onclick="updateVerificationStatus('${motor.id}', 'rejected')">Tolak</button>
@@ -191,7 +270,7 @@ async function updateVerificationStatus(id, newStatus) {
       .eq("id", id);
 
     if (error) {
-      showToast("Gagal memperbarui status");
+      showToast("Gagal memperbarui status: " + error.message);
       return;
     }
   } else {
@@ -199,10 +278,24 @@ async function updateVerificationStatus(id, newStatus) {
     if (idx !== -1) motorsList[idx].status = newStatus;
   }
 
-  showToast(`Status diubah menjadi ${newStatus}`);
-  renderSkkDashboard();
+  showToast(
+    newStatus === "verified"
+      ? "STNK disetujui — kendaraan aktif di akun mahasiswa"
+      : "Pengajuan STNK ditolak"
+  );
+  await renderSkkDashboard();
 }
 window.updateVerificationStatus = updateVerificationStatus;
+
+function openStnkModal(src) {
+  document.getElementById("modal-stnk-img").src = src;
+  document.getElementById("stnk-modal").style.display = "flex";
+}
+window.openStnkModal = openStnkModal;
+
+document.getElementById("btn-close-modal").addEventListener("click", () => {
+  document.getElementById("stnk-modal").style.display = "none";
+});
 
 // Render Detail & Kontrol Kunci Akses Keluar
 function renderDetailScreen() {
@@ -210,15 +303,6 @@ function renderDetailScreen() {
   if (!motor) {
     showScreen("screen-home");
     return;
-  }
-
-  const verifyBadge = document.getElementById("detail-verify-badge");
-  if (motor.status === "verified") {
-    verifyBadge.className = "verify-badge verified";
-    verifyBadge.textContent = "Terverifikasi SKK";
-  } else {
-    verifyBadge.className = "verify-badge pending";
-    verifyBadge.textContent = motor.status === "rejected" ? "Ditolak SKK" : "Menunggu ACC SKK";
   }
 
   document.getElementById("detail-motor-name").textContent = `${motor.brand} ${motor.color ? `(${motor.color})` : ""}`;
@@ -240,8 +324,6 @@ function renderDetailScreen() {
   simResult.innerHTML = "";
 
   if (motor.is_locked) {
-    lockCard.style.background = "";
-    lockCard.style.borderColor = "";
     lockCard.className = "lock-control-card locked";
     statusPill.className = "status-pill locked";
     statusPill.textContent = "AKSES KELUAR DIKUNCI";
@@ -260,30 +342,7 @@ function renderDetailScreen() {
 
     mainBtn.className = "btn btn-green";
     mainBtn.textContent = "Buka Kunci Akses untuk Keluar";
-  } else if (motor.status !== "verified") {
-    lockCard.className = "lock-control-card unlocked";
-    lockCard.style.background = "var(--amber-bg)";
-    lockCard.style.borderColor = "#F59E0B";
-    statusPill.className = "status-pill pending";
-    statusPill.textContent = motor.status === "rejected" ? "DITOLAK SKK" : "MENUNGGU ACC SKK";
-    toggleInput.checked = false;
-
-    lockHeading.style.color = "#78350F";
-    lockHeading.textContent = "Menunggu Persetujuan Petugas SKK";
-    lockDesc.style.color = "#92400E";
-    lockDesc.textContent =
-      "Pengajuan kendaraan sudah masuk ke sistem SKK ITS. Palang gerbang belum terbuka otomatis sebelum dokumen disetujui petugas.";
-    lockDivider.style.background = "var(--amber-border)";
-    lockSubTitle.style.color = "#78350F";
-    lockSubTitle.textContent = "Status Keamanan:";
-    lockSubDesc.style.color = "#92400E";
-    lockSubDesc.textContent = "Anda tetap bisa mengaktifkan kunci parkir lebih awal di bawah.";
-
-    mainBtn.className = "btn btn-red";
-    mainBtn.textContent = "Kunci Akses Keluar Gerbang";
   } else {
-    lockCard.style.background = "";
-    lockCard.style.borderColor = "";
     lockCard.className = "lock-control-card unlocked";
     statusPill.className = "status-pill unlocked";
     statusPill.textContent = "AKSES KELUAR TERBUKA";
@@ -328,11 +387,35 @@ async function toggleMotorLock() {
   showToast(nextLockState ? "Akses keluar gerbang dikunci" : "Akses keluar gerbang dibuka");
 }
 
-// Login & Demo Account
+// Login & Tombol Akun Demo Terpisah (Mahasiswa vs SKK)
+const roleSelect = document.getElementById("login-role");
+const demoBtn = document.getElementById("btn-fill-demo");
+
+roleSelect.addEventListener("change", () => {
+  demoBtn.textContent =
+    roleSelect.value === "skk"
+      ? "Coba Akun Demo (Petugas SKK)"
+      : "Coba Akun Demo (Mahasiswa)";
+});
+
+demoBtn.addEventListener("click", () => {
+  if (roleSelect.value === "skk") {
+    document.getElementById("input-nrp").value = "198804152015041002";
+    document.getElementById("input-nama").value = "USERDEMOSKK";
+    document.getElementById("input-pass").value = "password123";
+    showToast("Akun demo SKK terisi — klik Masuk ke GateFlow");
+  } else {
+    document.getElementById("input-nrp").value = "5026231000";
+    document.getElementById("input-nama").value = "USERDEMO";
+    document.getElementById("input-pass").value = "password123";
+    showToast("Akun demo Mahasiswa terisi — klik Masuk ke GateFlow");
+  }
+});
+
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   currentUser = {
-    role: document.getElementById("login-role").value,
+    role: roleSelect.value,
     nrp: document.getElementById("input-nrp").value.trim(),
     name: document.getElementById("input-nama").value.trim()
   };
@@ -347,16 +430,10 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   showToast(`Selamat datang, ${currentUser.name}`);
 });
 
-document.getElementById("btn-fill-demo").addEventListener("click", () => {
-  document.getElementById("login-role").value = "mahasiswa";
-  document.getElementById("input-nrp").value = "5026231000";
-  document.getElementById("input-nama").value = "USERDEMO";
-  document.getElementById("input-pass").value = "password123";
-  showToast("Akun demo terisi — klik Masuk ke GateFlow");
-});
-
 function handleLogout() {
   document.getElementById("login-form").reset();
+  roleSelect.value = "mahasiswa";
+  demoBtn.textContent = "Coba Akun Demo (Mahasiswa)";
   motorsList = [];
   selectedMotorId = null;
   showScreen("screen-login");
@@ -370,7 +447,7 @@ document.getElementById("btn-go-add").addEventListener("click", () => {
   document.getElementById("motor-brand-input").value = "";
   document.getElementById("motor-color-input").value = "";
   document.getElementById("motor-plate-input").value = "";
-  proofAttached = false;
+  generatedProofDataUrl = "";
   updateOwnershipSegment("Motor Pribadi");
   showScreen("screen-add");
 });
@@ -396,22 +473,25 @@ function updateOwnershipSegment(type) {
   const uploadBox = document.getElementById("upload-box");
   const uploadTitle = document.getElementById("upload-title");
   const uploadSub = document.getElementById("upload-sub");
+  const previewImg = document.getElementById("upload-preview-img");
 
   uploadBox.classList.remove("uploaded");
-  proofAttached = false;
+  previewImg.style.display = "none";
+  previewImg.src = "";
+  generatedProofDataUrl = "";
 
   if (type === "Pinjaman (24 Jam)") {
-    proofLabel.textContent = "Foto Pelat Depan / NRP Pemilik *";
+    proofLabel.textContent = "Foto Pelat Depan Motor *";
     uploadTitle.style.color = "#1D4ED8";
-    uploadTitle.textContent = "[ + Ambil Foto Pelat Depan Motor ]";
+    uploadTitle.textContent = "[ + Ketuk untuk Generate Dummy Foto Pelat ]";
     uploadSub.style.color = "#2563EB";
-    uploadSub.textContent = "Tidak wajib STNK fisik untuk akses pinjaman 24 jam";
+    uploadSub.textContent = "Otomatis membuat pratinjau pelat nomor pinjaman 24 jam";
   } else {
-    proofLabel.textContent = "Bukti STNK / Foto Pelat *";
+    proofLabel.textContent = "Bukti STNK Kendaraan *";
     uploadTitle.style.color = "#1D4ED8";
-    uploadTitle.textContent = "[ + Ketuk untuk Lampirkan Bukti STNK / Pelat ]";
+    uploadTitle.textContent = "[ + Ketuk untuk Generate Dummy STNK ]";
     uploadSub.style.color = "#2563EB";
-    uploadSub.textContent = "Simulasi unggah berkas verifikasi motor pribadi";
+    uploadSub.textContent = "Otomatis membuat pratinjau STNK sesuai data di atas";
   }
 }
 
@@ -419,20 +499,37 @@ document.querySelectorAll(".segment-btn").forEach((btn) => {
   btn.addEventListener("click", () => updateOwnershipSegment(btn.dataset.type));
 });
 
+// Generate Dummy STNK / Foto Pelat saat kotak unggah diklik
 document.getElementById("upload-box").addEventListener("click", () => {
-  proofAttached = true;
+  const brand = document.getElementById("motor-brand-input").value.trim() || "Honda Vario 160";
+  const color = document.getElementById("motor-color-input").value.trim() || "Hitam";
+  const plate = document.getElementById("motor-plate-input").value.trim().toUpperCase() || "L 9988 XY";
+
+  generatedProofDataUrl = generateDummyStnkDataUrl({
+    plate,
+    brand,
+    color,
+    ownerName: currentUser.name,
+    nrp: currentUser.nrp,
+    ownershipType: selectedOwnership
+  });
+
   const uploadBox = document.getElementById("upload-box");
   const uploadTitle = document.getElementById("upload-title");
   const uploadSub = document.getElementById("upload-sub");
+  const previewImg = document.getElementById("upload-preview-img");
 
   uploadBox.classList.add("uploaded");
   uploadTitle.style.color = "#065F46";
   uploadTitle.textContent =
     selectedOwnership === "Pinjaman (24 Jam)"
-      ? "Foto_Pelat_Pinjaman_24Jam.jpg"
-      : "STNK_Kendaraan_Terverifikasi.jpg";
+      ? "Dummy Foto Pelat Terlampir"
+      : "Dummy STNK Terlampir";
   uploadSub.style.color = "#047857";
-  uploadSub.textContent = "Berkas siap disimpan (Ketuk untuk mengganti)";
+  uploadSub.textContent = "Ketuk lagi jika ingin memperbarui pratinjau dokumen";
+
+  previewImg.src = generatedProofDataUrl;
+  previewImg.style.display = "block";
 });
 
 // Simpan Kendaraan Baru (Status awal: pending menunggu ACC SKK)
@@ -443,14 +540,24 @@ document.getElementById("add-motor-form").addEventListener("submit", async (e) =
   const plate = document.getElementById("motor-plate-input").value.trim().toUpperCase();
 
   if (!brand || !plate) return;
-  if (!proofAttached) {
-    showToast("Ketuk kotak unggah bukti terlebih dahulu");
+  if (!generatedProofDataUrl) {
+    showToast("Ketuk kotak bukti untuk membuat dummy STNK dulu");
     return;
   }
 
+  // Perbarui gambar dummy sekali lagi agar 100% cocok dengan isian teks terakhir
+  const finalProofUrl = generateDummyStnkDataUrl({
+    plate,
+    brand,
+    color,
+    ownerName: currentUser.name,
+    nrp: currentUser.nrp,
+    ownershipType: selectedOwnership
+  });
+
   const submitBtn = document.getElementById("btn-submit-motor");
   submitBtn.disabled = true;
-  submitBtn.textContent = "Menyimpan...";
+  submitBtn.textContent = "Mengirim ke SKK...";
 
   const newRecord = {
     nrp: currentUser.nrp,
@@ -458,7 +565,7 @@ document.getElementById("add-motor-form").addEventListener("submit", async (e) =
     plate,
     brand,
     color,
-    stnk_image: selectedOwnership === "Pinjaman (24 Jam)" ? "Foto_Pelat_24Jam.jpg" : "STNK_Verified.jpg",
+    stnk_image: finalProofUrl,
     status: "pending",
     is_locked: false,
     skk_note: selectedOwnership
@@ -468,7 +575,7 @@ document.getElementById("add-motor-form").addEventListener("submit", async (e) =
     const { error } = await supabaseClient.from("motorcycles").insert([newRecord]);
     if (error) {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Simpan Kendaraan";
+      submitBtn.textContent = "Ajukan ke SKK ITS";
       showToast("Gagal menyimpan: " + error.message);
       return;
     }
@@ -477,7 +584,7 @@ document.getElementById("add-motor-form").addEventListener("submit", async (e) =
   }
 
   submitBtn.disabled = false;
-  submitBtn.textContent = "Simpan Kendaraan";
+  submitBtn.textContent = "Ajukan ke SKK ITS";
   await renderStudentHome();
   showScreen("screen-home");
   showToast(`${brand} (${plate}) diajukan — menunggu ACC SKK`);
@@ -498,12 +605,6 @@ document.getElementById("btn-test-gate").addEventListener("click", () => {
     simResult.innerHTML = `
       <strong>PALANG GERBANG MENOLAK TERBUKA!</strong><br/>
       Kamera LPR mendeteksi pelat <strong>${motor.plate}</strong> dalam status <strong>DIKUNCI</strong>. Peringatan dikirim ke Pos SKK ITS & HP pemilik (${motor.nrp}).
-    `;
-  } else if (motor.status !== "verified") {
-    simResult.className = "sim-result alert";
-    simResult.innerHTML = `
-      <strong>MENUNGGU VERIFIKASI PETUGAS!</strong><br/>
-      Pelat <strong>${motor.plate}</strong> belum disetujui SKK ITS. Petugas gerbang diminta mengecek manual.
     `;
   } else {
     simResult.className = "sim-result pass";

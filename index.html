@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ITS RideGuard / GateFlow — Validasi Gerbang Otomatis</title>
+  <title>GateFlow ITS — Validasi Gerbang Otomatis</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -49,7 +49,7 @@
           <button type="submit" class="btn btn-primary">Masuk ke GateFlow</button>
 
           <div class="demo-divider"><span>atau</span></div>
-          <button type="button" id="btn-fill-demo" class="btn btn-demo">Coba Akun Demo</button>
+          <button type="button" id="btn-fill-demo" class="btn btn-demo">Coba Akun Demo (Mahasiswa)</button>
         </form>
       </div>
 
@@ -63,8 +63,8 @@
   <section id="screen-home" class="screen">
     <div class="top-bar">
       <div>
-        <div id="user-greeting" class="user-name">Halo, Jeremy</div>
-        <div id="user-sub" class="user-meta">NRP 5026231218 • Mahasiswa ITS</div>
+        <div id="user-greeting" class="user-name">Halo, Mahasiswa</div>
+        <div id="user-sub" class="user-meta">NRP • Mahasiswa ITS</div>
       </div>
       <div class="top-actions">
         <span class="badge-lpr">LPR Aktif</span>
@@ -74,7 +74,7 @@
 
     <div class="content">
       <div class="section-title">Motormu yang Terdaftar</div>
-      <div class="section-sub">Klik kartu motor untuk mengatur kunci akses keluar gerbang</div>
+      <div class="section-sub">Motor yang sudah di-ACC SKK dapat diklik untuk mengatur kunci gerbang</div>
 
       <div id="motor-list" class="list-container">
         <div class="empty-state">Memuat data kendaraan dari Supabase...</div>
@@ -83,7 +83,7 @@
       <div class="info-banner">
         <div class="info-banner-title">Bawa motor lain atau pinjam motor teman?</div>
         <div class="info-banner-desc">
-          Tambahkan jenis motor dan pelat nomornya sebelum berangkat agar kamera gerbang ITS mengenali kendaraan Anda.
+          Tambahkan jenis motor dan pelat nomornya sebelum berangkat agar diverifikasi oleh petugas SKK ITS.
         </div>
       </div>
 
@@ -93,12 +93,12 @@
     </div>
   </section>
 
-  <!-- SCREEN 2B: DASHBOARD PETUGAS SKK ITS -->
+  <!-- SCREEN 2B: DASHBOARD PETUGAS SKK ITS (KHUSUS VERIFIKASI STNK) -->
   <section id="screen-skk" class="screen">
     <div class="top-bar">
       <div>
-        <div id="skk-greeting" class="user-name">Pos Gerbang SKK ITS</div>
-        <div id="skk-sub" class="user-meta">Monitor Verifikasi & Status Kunci</div>
+        <div id="skk-greeting" class="user-name">Pos Verifikasi SKK ITS</div>
+        <div id="skk-sub" class="user-meta">Petugas Keamanan Kampus</div>
       </div>
       <div class="top-actions">
         <span class="badge-lpr">SKK Live</span>
@@ -107,11 +107,11 @@
     </div>
 
     <div class="content">
-      <div class="section-title">Daftar Kendaraan Terdaftar</div>
-      <div class="section-sub">Verifikasi STNK baru & pantau status kunci parkir mahasiswa</div>
+      <div class="section-title">Antrean Verifikasi STNK</div>
+      <div class="section-sub">Periksa kecocokan dokumen STNK / pelat dengan data pengajuan mahasiswa</div>
 
       <div id="skk-motor-list" class="list-container">
-        <div class="empty-state">Memuat data kendaraan...</div>
+        <div class="empty-state">Memuat antrean verifikasi...</div>
       </div>
     </div>
   </section>
@@ -152,13 +152,14 @@
         <div class="form-group">
           <label id="proof-label" class="form-label">Bukti STNK / Foto Pelat *</label>
           <div id="upload-box" class="upload-box">
-            <div id="upload-title" class="upload-title">[ + Ketuk untuk Lampirkan Bukti STNK / Pelat ]</div>
-            <div id="upload-sub" class="upload-sub">Simulasi unggah berkas verifikasi kendaraan</div>
+            <div id="upload-title" class="upload-title">[ + Ketuk untuk Generate Dummy STNK ]</div>
+            <div id="upload-sub" class="upload-sub">Otomatis membuat pratinjau STNK sesuai data di atas</div>
+            <img id="upload-preview-img" class="stnk-preview-img" style="display: none;" alt="Pratinjau Dokumen STNK" />
           </div>
         </div>
 
         <div class="bottom-cta">
-          <button id="btn-submit-motor" type="submit" class="btn btn-primary">Simpan Kendaraan</button>
+          <button id="btn-submit-motor" type="submit" class="btn btn-primary">Ajukan ke SKK ITS</button>
         </div>
       </form>
     </div>
@@ -169,7 +170,7 @@
     <div class="nav-bar">
       <button id="btn-back-detail" class="btn-back" type="button">< Kembali</button>
       <span class="nav-title">Kontrol Akses Motor</span>
-      <span class="nav-spacer"></span>
+      <span style="width: 56px;"></span>
     </div>
 
     <div class="content">
@@ -227,6 +228,17 @@
     </div>
   </section>
 
+</div>
+
+<!-- Modal Zoom Gambar STNK untuk Petugas SKK -->
+<div id="stnk-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <strong style="font-size:14px;">Pratinjau Dokumen Kendaraan</strong>
+      <button id="btn-close-modal" type="button" class="btn-back">Tutup</button>
+    </div>
+    <img id="modal-stnk-img" style="width:100%; border-radius:10px; border:1px solid #CBD5E1;" alt="Dokumen STNK" />
+  </div>
 </div>
 
 <div id="toast" class="toast">Tersimpan</div>

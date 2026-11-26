@@ -308,8 +308,13 @@ body {
   transition: transform 0.15s;
 }
 
-.motor-card:hover {
+.motor-card:hover:not(.disabled-card) {
   transform: translateY(-2px);
+}
+
+.motor-card.disabled-card {
+  cursor: not-allowed;
+  opacity: 0.92;
 }
 
 .motor-card.unlocked {
@@ -457,7 +462,7 @@ body {
   border: 1.5px dashed #3B82F6;
   background: var(--its-blue-light);
   border-radius: 12px;
-  padding: 18px 14px;
+  padding: 16px 14px;
   text-align: center;
   cursor: pointer;
 }
@@ -478,6 +483,16 @@ body {
   font-size: 11px;
   color: #2563EB;
   margin-top: 4px;
+}
+
+.stnk-preview-img {
+  width: 100%;
+  max-height: 185px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-top: 12px;
+  border: 1px solid var(--slate-300);
+  background: #FFFFFF;
 }
 
 /* Detail & Toggle Switch */
@@ -506,17 +521,8 @@ body {
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 999px;
-}
-
-.verify-badge.verified {
   background: #DBEAFE;
   color: var(--its-blue);
-}
-
-.verify-badge.pending {
-  background: var(--amber-bg);
-  color: var(--amber-text);
-  border: 1px solid var(--amber-border);
 }
 
 .detail-name {
@@ -686,37 +692,72 @@ input:checked + .slider:before {
   color: #FECACA;
 }
 
-/* SKK Card Actions */
+/* SKK Card & Dummy STNK */
 .skk-card {
   background: var(--slate-50);
   border: 1.5px solid var(--slate-300);
   border-radius: 14px;
   padding: 14px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.skk-stnk-thumb {
+  width: 100%;
+  max-height: 175px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid var(--slate-300);
+  background: #FFFFFF;
+  margin-top: 10px;
+  cursor: zoom-in;
 }
 
 .skk-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .btn-sm {
-  padding: 8px 10px;
+  padding: 10px;
   border-radius: 8px;
   border: none;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 200;
+}
+
+.modal-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 16px;
+  width: 100%;
+  max-width: 400px;
 }
 
 /* Misc */
 .empty-state {
   text-align: center;
-  padding: 24px 12px;
+  padding: 28px 14px;
   color: var(--slate-500);
   font-size: 13px;
+  background: var(--slate-50);
+  border: 1px dashed var(--slate-300);
+  border-radius: 14px;
+  margin-bottom: 16px;
 }
 
 .footer-links {
